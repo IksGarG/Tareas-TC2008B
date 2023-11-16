@@ -1,0 +1,109 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class ApplyTransforms : MonoBehaviour
+{
+    [SerializeField] Vector3 displacement;
+    [SerializeField] float Angle;
+    [SerializeField] AXIS rotationAXIS;
+    [SerializeField] private Transform[] wheelTransforms;
+
+    Mesh mesh;
+    Vector3[] baseVertices;
+    Vector3[] newVertices;
+
+    void Start()
+    {
+        mesh = GetComponentInChildren<MeshFilter>().mesh;
+        baseVertices = mesh.vertices;
+
+        // Create a copy of the vertices that we can manipulate
+        newVertices = new Vector3[baseVertices.Length];
+        baseVertices.CopyTo(newVertices, 0);
+        // Validate wheel transforms
+        if (wheelTransforms == null || wheelTransforms.Length == 0)
+        {
+            Debug.LogError("Wheel transforms not assigned!");
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        DoTransforms();
+    }
+
+    void DoTransforms()
+{
+
+    // Matrix4x4 move = HW_Transforms.TranslationMat(displacement.x * Time.time, displacement.y * Time.time, displacement.z * Time.time);
+
+
+    // // Apply rotation around the wheel's local Y-axis
+    // Matrix4x4 rotate = HW_Transforms.RotateMat(Angle * Time.time, rotationAXIS);
+
+    
+    // // // Translate to origin - You might not need this if the object's origin is already centered.
+    // Matrix4x4 moveOrigin = HW_Transforms.TranslationMat(-displacement.x, -displacement.y, -displacement.z);
+
+    // // // Translate to origin - You might not need this if the object's origin is already centered.
+    // Matrix4x4 moveObject = HW_Transforms.TranslationMat(displacement.x, displacement.y, displacement.z);
+
+
+    // // The final transformation should be: move then rotate
+    // // Because the matrix multiplication is read right-to-left, you rotate first, then translate.
+    // Matrix4x4 composite = move * rotate;
+
+    // // Apply transformations with correct order: move, then rotate, then translate back
+    // // Matrix4x4 composite = fromOrigin * rotateWheel * toOrigin * move;
+
+    // for (int i = 0; i < newVertices.Length; i++)
+    // {
+    //     Vector4 temp = new Vector4(baseVertices[i].x,
+    //                                 baseVertices[i].y,
+    //                                 baseVertices[i].z,
+    //                                 1);
+    //     newVertices[i] = composite * temp;
+    // }
+    // mesh.vertices = newVertices;
+    // mesh.RecalculateNormals();
+
+
+    // Move the car body
+    transform.position += displacement * Time.deltaTime;
+
+    // Optionally, rotate the car body
+    // transform.Rotate(new Vector3(0, Angle * Time.deltaTime, 0), Space.World);
+
+    // Apply transformations to the car body mesh
+    // ApplyMeshTransforms();
+
+    // Rotate each wheel
+    foreach (Transform wheel in wheelTransforms)
+    {
+        // Apply rotation to each wheel
+        wheel.Rotate(new Vector3(Angle * Time.deltaTime, 0, 0), Space.Self);
+        wheel.position += displacement * Time.deltaTime;
+    }
+}
+    private void ApplyMeshTransforms()
+    {
+        Matrix4x4 move = HW_Transforms.TranslationMat(displacement.x * Time.deltaTime, displacement.y * Time.deltaTime, displacement.z * Time.deltaTime);
+        Matrix4x4 rotate = HW_Transforms.RotateMat(Angle * Time.deltaTime, rotationAXIS);
+        Matrix4x4 moveOrigin = HW_Transforms.TranslationMat(-displacement.x, -displacement.y, -displacement.z);
+        Matrix4x4 moveObject = HW_Transforms.TranslationMat(displacement.x, displacement.y, displacement.z);
+        Matrix4x4 composite =  move * rotate;
+
+        for (int i = 0; i < newVertices.Length; i++)
+            {
+                Vector4 temp = new Vector4(baseVertices[i].x,
+                                            baseVertices[i].y,
+                                            baseVertices[i].z,
+                                            1);
+                newVertices[i] = composite * temp;
+            }
+            mesh.vertices = newVertices;
+            mesh.RecalculateNormals();
+    }
+}
